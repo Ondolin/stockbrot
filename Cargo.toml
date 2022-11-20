@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+    "engine",
+    "lichess"
+]
+
+[profile.release]
+opt-level = 3
