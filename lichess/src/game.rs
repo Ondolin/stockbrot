@@ -1,3 +1,4 @@
+use chess::Color;
 use serde::{Deserialize, Serialize};
 use engine::Engine;
 
@@ -5,13 +6,15 @@ use engine::Engine;
 struct GameInfo {
     white: GamePlayer,
     black: GamePlayer,
-    state: GameState
+    state: GameState,
+    #[serde(rename = "initialFen")]
+    initial_fen: Option<String>
 }
 
 impl GameInfo {
-    fn my_color(&self) -> &str {
-        if self.white.is_me() { "w" }
-        else if self.black.is_me() { "b" }
+    fn my_color(&self) -> Color {
+        if self.white.is_me() { Color::White }
+        else if self.black.is_me() { Color::Black }
         else { panic!("Why the hell arent you part of that game?!") }
     }
 }
@@ -60,24 +63,24 @@ pub async fn listen_to_game(game_id: String) {
 
         match game_info.state {
             GameState::StateEvent { ref moves, .. } => {
+
+                if let Some(fen) = &game_info.initial_fen {
+                    engine.load_fen(fen).expect("Valid fen");
+                }
+
                 for joice in moves.split(' ') {
-                    engine.make_move(joice.to_string());
+                    if joice != "" {
+                        engine.make_move(joice.to_string());
+                    }
                 }
 
-                // check if it is our move
-                if (moves.len() % 2 != 0 && game_info.my_color() == "w") ||
-                    (moves.len() % 2 == 0 && game_info.my_color() == "b") {
+                log::info!("Loaded Game: {}", engine.get_position());
 
-                    let engine_move = engine.get_engine_move();
-
-                    // post move
-                    client.post(format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, engine_move))
-                        .bearer_auth(dotenv::var("LICHESS_TOKEN").unwrap())
-                        .send()
-                        .await
-                        .unwrap();
-
+                if engine.is_my_turn(game_info.my_color()) {
+                    post_move(&client, game_id.clone(), engine.get_engine_move()).await;
                 }
+
+
             }
             _ => unreachable!()
         }
@@ -98,18 +101,8 @@ pub async fn listen_to_game(game_id: String) {
                     engine.make_move(moves.last().unwrap().to_string());
 
                     // check if it is our move
-                    if (moves.len() % 2 == 0 && game_info.my_color() == "w") ||
-                        (moves.len() % 2 != 0 && game_info.my_color() == "b") {
-
-                        let engine_move = engine.get_engine_move();
-
-                        // post move
-                        client.post(format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, engine_move))
-                            .bearer_auth(dotenv::var("LICHESS_TOKEN").unwrap())
-                            .send()
-                            .await
-                            .unwrap();
-
+                    if engine.is_my_turn(game_info.my_color()) {
+                        post_move(&client, game_id.clone(), engine.get_engine_move()).await;
                     }
 
                 },
@@ -119,4 +112,13 @@ pub async fn listen_to_game(game_id: String) {
         }
 
     }
+}
+
+async fn post_move(client: &reqwest::Client, game_id: String, engine_move: String) {
+    // post move
+    client.post(format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, engine_move))
+        .bearer_auth(dotenv::var("LICHESS_TOKEN").unwrap())
+        .send()
+        .await
+        .unwrap();
 }

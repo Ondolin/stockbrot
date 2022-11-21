@@ -1,7 +1,12 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use chess::{Board, ChessMove, Game, MoveGen};
+use std::sync::atomic::AtomicBool;
+use chashmap::CHashMap;
+use chess::{Board, ChessMove, Color, Error, Game, MoveGen};
 
 use crate::evaluate::evaluate;
 use crate::evaluated_position::EvaluatedPositions;
@@ -9,6 +14,10 @@ use crate::evaluated_position::EvaluatedPositions;
 mod evaluate;
 mod search;
 mod evaluated_position;
+
+lazy_static! {
+    static ref SEARCH_DEPTH: u8 = dotenv::var("SEARCH_DEPTH").unwrap().parse::<u8>().unwrap();
+}
 
 pub struct Engine {
     game: Game,
@@ -19,7 +28,22 @@ impl Engine {
     pub fn new() -> Engine {
         Engine {
             game: Game::new(),
-            evaluated_positions: Arc::new(RwLock::new(HashMap::new()))
+            evaluated_positions: Arc::new(RwLock::new(CHashMap::new()))
+        }
+    }
+
+    pub fn get_position(&self) -> String {
+        self.game.current_position().to_string()
+    }
+
+    pub fn load_fen(&mut self, fen: &str) -> Result<(), ()> {
+        let game = Game::from_str(fen);
+        match game {
+            Ok(game) => {
+                self.game = game;
+                Ok(())
+            },
+            Err(e) => Err(())
         }
     }
 
@@ -32,9 +56,18 @@ impl Engine {
     }
 
     pub fn get_engine_move(&mut self) -> String {
-        let joice = self.alpha_beta_search(10, self.evaluated_positions.clone()).to_string();
+        log::info!("Generating move...");
+        let joice = self.alpha_beta_search(*SEARCH_DEPTH, self.evaluated_positions.clone()).to_string();
+
+
         log::warn!("Engine Move: {joice}");
+        log::warn!("Pos: {}", self.game.current_position().to_string());
+
         joice
+    }
+
+    pub fn is_my_turn(&self, color: Color) -> bool {
+        self.game.side_to_move() == color
     }
 }
 
