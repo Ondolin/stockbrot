@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::AtomicBool;
+use std::time::Duration;
 use chashmap::CHashMap;
 use chess::{Board, ChessMove, Color, Error, Game, MoveGen};
 
@@ -13,11 +14,8 @@ use crate::evaluated_position::EvaluatedPositions;
 
 mod evaluate;
 mod search;
+mod quiesce_search;
 mod evaluated_position;
-
-lazy_static! {
-    static ref SEARCH_DEPTH: u8 = dotenv::var("SEARCH_DEPTH").unwrap().parse::<u8>().unwrap();
-}
 
 pub struct Engine {
     game: Game,
@@ -57,8 +55,7 @@ impl Engine {
 
     pub fn get_engine_move(&mut self) -> String {
         log::info!("Generating move...");
-        let joice = self.alpha_beta_search(*SEARCH_DEPTH, self.evaluated_positions.clone()).to_string();
-
+        let joice = self.iterative_deepening(self.evaluated_positions.clone(), Duration::from_secs(8)).to_string();
 
         log::warn!("Engine Move: {joice}");
         log::warn!("Pos: {}", self.game.current_position().to_string());

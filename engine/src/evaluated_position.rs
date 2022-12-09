@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use chashmap::CHashMap;
 use chess::Board;
-use crate::SEARCH_DEPTH;
+use crate::evaluate::MATE_SCORE;
+use crate::search::CURRENT_SEARCH_DEPTH;
 
 #[derive(Clone)]
 pub struct EvaluatedPosition {
     pub board: Board,
-    pub evaluation: f32,
+    pub evaluation: i32,
     pub depth: u8
 }
 
@@ -27,13 +28,13 @@ impl PartialOrd<Self> for EvaluatedPosition {
 pub type EvaluatedPositions = CHashMap<u64, EvaluatedPosition>;
 
 pub trait EvaluatedPositionsFunctions {
-    fn get_or_calculate<F>(&self, board: Board, depth: u8, calculate: F) -> f32 where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> f32;
+    fn get_or_calculate<F>(&self, board: Board, depth: u8, calculate: F) -> i32 where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> i32;
 }
 
 impl EvaluatedPositionsFunctions for Arc<RwLock<EvaluatedPositions>> {
 
-    fn get_or_calculate<F>(&self, board: Board, depth: u8, mut calculate: F) -> f32
-        where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> f32 {
+    fn get_or_calculate<F>(&self, board: Board, depth: u8, mut calculate: F) -> i32
+        where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> i32 {
 
         let hash = board.get_hash();
 
@@ -46,11 +47,13 @@ impl EvaluatedPositionsFunctions for Arc<RwLock<EvaluatedPositions>> {
 
         let mut evaluation = calculate(self.clone());
 
+        let max_search_depth = CURRENT_SEARCH_DEPTH.load(core::sync::atomic::Ordering::Relaxed) as i32;
+
         // shorter mate has high score
-        if evaluation > 10_000.0 {
-            evaluation -= *SEARCH_DEPTH as f32 - depth as f32;
-        } else if evaluation < -10_000.0 {
-            evaluation += *SEARCH_DEPTH as f32 - depth as f32;
+        if evaluation == MATE_SCORE {
+            evaluation -= max_search_depth - depth as i32;
+        } else if evaluation == -MATE_SCORE {
+            evaluation += max_search_depth - depth as i32;
         }
 
         self.read().unwrap().insert(hash, EvaluatedPosition {

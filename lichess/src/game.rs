@@ -59,13 +59,16 @@ pub async fn listen_to_game(game_id: String) {
         .unwrap();
 
     if let Some(chunk) = req.chunk().await.unwrap() {
+
         let game_info: GameInfo = serde_json::from_slice(&chunk).unwrap();
 
         match game_info.state {
             GameState::StateEvent { ref moves, .. } => {
 
                 if let Some(fen) = &game_info.initial_fen {
-                    engine.load_fen(fen).expect("Valid fen");
+                    if fen != "startpos" {
+                        engine.load_fen(fen).expect("Valid fen");
+                    }
                 }
 
                 for joice in moves.split(' ') {
@@ -86,15 +89,17 @@ pub async fn listen_to_game(game_id: String) {
         }
 
         // ignore that packet
-        let _ = req.chunk().await.unwrap();
+        //let _ = req.chunk().await.unwrap();
 
         while let Some(chunk) = req.chunk().await.unwrap() {
+
             if chunk == "\n" { continue };
 
             let game_state: GameState = serde_json::from_slice(&chunk).unwrap();
 
             match game_state {
                 GameState::StateEvent { moves, .. } => {
+
                     let moves: Vec<&str> = moves.split(' ').collect();
 
                     // update move in engine
