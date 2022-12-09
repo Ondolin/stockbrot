@@ -41,7 +41,7 @@ impl Engine {
                 self.game = game;
                 Ok(())
             },
-            Err(e) => Err(())
+            Err(_) => Err(())
         }
     }
 

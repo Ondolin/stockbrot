@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
-    let mut open_games: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let open_games: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
 
     stream_game_updates(open_games.clone());
 
