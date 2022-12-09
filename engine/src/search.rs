@@ -104,17 +104,8 @@ impl Engine {
 
 }
 
-pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, evaluated_positions: Arc<RwLock<EvaluatedPositions>>) -> i32 {
-    // leaf node
-    if depth_left == 0 || board.status() != BoardStatus::Ongoing { return evaluated_positions.get_or_calculate(board, depth_left, |_| {
-        quiesce_search_max(board, i32::MIN, i32::MAX)
-    } ) }
-
-    let value = AtomicI32::new(i32::MIN);
-
-    let alpha = AtomicI32::new(alpha);
-    let beta = AtomicI32::new(beta);
-
+// put captures before other moves
+pub fn get_move_order(board: &Board) -> Vec<ChessMove> {
     let mut moves = MoveGen::new_legal(&board);
     let targets = board.color_combined(!board.side_to_move());
     moves.set_iterator_mask(*targets);
@@ -124,7 +115,18 @@ pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, e
     let mut second_half = moves.collect::<Vec<ChessMove>>();
     moves_in_order.append(&mut second_half);
 
-    for joice in moves_in_order {
+    moves_in_order
+}
+
+pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, evaluated_positions: Arc<RwLock<EvaluatedPositions>>) -> i32 {
+    // leaf node
+    if depth_left == 0 || board.status() != BoardStatus::Ongoing { return evaluated_positions.get_or_calculate(board, depth_left, |_| {
+        quiesce_search_max(board, i32::MIN, i32::MAX)
+    } ) }
+
+    let mut value = i32::MIN;
+
+    for joice in get_move_order(&board) {
 
         if STOP_THREADS.load(Ordering::SeqCst) { break; }
 
@@ -134,31 +136,18 @@ pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, e
             .get_or_calculate(
                 copy,
                 depth_left,
-                |eval| {
-                    alpha_beta_min(
-                        copy,
-                        alpha.load(Ordering::Relaxed),
-                        alpha.load(Ordering::Relaxed),
-                        depth_left - 1,
-                        eval)
-                }
+                |eval| alpha_beta_min(copy, alpha, beta, depth_left - 1, eval)
             );
 
-        value.fetch_max(score, Ordering::Relaxed);
+        value = value.max(score);
 
-        let value = value.load(Ordering::Relaxed);
+        if value >= beta { break }
 
-        if value >= beta.load(Ordering::Relaxed) {
-            // return true;
-            break;
-        }
+        alpha = alpha.max(value);
 
-        alpha.fetch_max(value, Ordering::Relaxed);
-
-        // return false;
     }
 
-    value.load(Ordering::Relaxed)
+    value
 }
 
 pub fn alpha_beta_min(board: Board, alpha: i32, mut beta: i32, depth_left: u8, evaluated_positions: Arc<RwLock<EvaluatedPositions>>) -> i32 {
@@ -167,49 +156,22 @@ pub fn alpha_beta_min(board: Board, alpha: i32, mut beta: i32, depth_left: u8, e
         quiesce_search_min(board, i32::MIN, i32::MAX)
     } ) }
 
-    let mut moves = MoveGen::new_legal(&board);
-
     let mut value = i32::MAX;
 
-    let targets = board.color_combined(!board.side_to_move());
-    moves.set_iterator_mask(*targets);
-    'a: {
-        for joice in &mut moves {
+    for joice in get_move_order(&board) {
 
-            if STOP_THREADS.load(Ordering::SeqCst) { break; }
+        if STOP_THREADS.load(Ordering::SeqCst) { break; }
 
-            let copy = board.make_move_new(joice);
+        let copy = board.make_move_new(joice);
+        value = value.min(evaluated_positions
+            .get_or_calculate(
+                copy,
+                depth_left,
+                |eval| alpha_beta_max(copy, alpha, beta, depth_left - 1, eval)));
 
-            // value = value.min(alpha_beta_max(copy, alpha, beta, depth_left - 1));
-            value = value.min(evaluated_positions
-                .get_or_calculate(
-                    copy,
-                    depth_left,
-                    |eval| alpha_beta_max(copy, alpha, beta, depth_left - 1, eval)));
+        if value <= alpha { break }
 
-            if value <= alpha { break 'a }
-
-
-            beta = beta.min(value);
-        }
-        moves.set_iterator_mask(!EMPTY);
-        for joice in &mut moves {
-
-            if STOP_THREADS.load(Ordering::SeqCst) { break; }
-
-            let copy = board.make_move_new(joice);
-
-            value = value.min(evaluated_positions
-                .get_or_calculate(
-                    copy,
-                    depth_left,
-                    |eval| alpha_beta_max(copy, alpha, beta, depth_left - 1, eval)));
-
-
-            if value <= alpha { break 'a }
-
-            beta = beta.min(value);
-        }
+        beta = beta.min(value);
     }
 
     value
