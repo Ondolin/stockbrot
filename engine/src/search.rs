@@ -36,7 +36,7 @@ impl Engine {
                 let score = alpha_beta_min(copy, alpha, beta, max_depth - 1, evaluated_positions.clone());
                 if STOP_THREADS.load(Ordering::SeqCst) { return; }
 
-                log::error!("up {} {score}", joice.to_string());
+                log::info!("Move Evaluation: {} {score}", joice.to_string());
 
                 if score >= { best_move.read().unwrap().1 } {
                     *best_move.write().unwrap() = (Some(*joice), score);
@@ -45,7 +45,7 @@ impl Engine {
                 let score = alpha_beta_max(copy, alpha, beta, max_depth - 1, evaluated_positions.clone());
                 if STOP_THREADS.load(Ordering::SeqCst) { return; }
 
-                log::error!("down {} {score}", joice.to_string());
+                log::info!("Move Evaluation: {} {score}", joice.to_string());
 
                 if score <= { best_move.read().unwrap().1 } {
                     *best_move.write().unwrap() = (Some(*joice), score);
