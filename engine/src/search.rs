@@ -4,10 +4,10 @@ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU8, Ordering};
 use std::time::Duration;
 use atomic_float::AtomicF32;
 use chess::{Board, BoardStatus, ChessMove, Color, EMPTY, MoveGen};
-use crate::{Engine, evaluate, EvaluatedPositions};
+use crate::{Engine, EvaluatedPositions};
 
 use rayon::prelude::*;
-use crate::evaluate::MATE_SCORE;
+use crate::evaluation::MATE_SCORE;
 use crate::evaluated_position::EvaluatedPositionsFunctions;
 use crate::quiesce_search::{quiesce_search_max, quiesce_search_min};
 
@@ -63,17 +63,28 @@ impl Engine {
 
     pub fn iterative_deepening(&self, evaluated_positions: Arc<RwLock<EvaluatedPositions>>, timeout: Duration) -> ChessMove {
 
+        let soft_stop: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+        let soft_stop_copy = soft_stop.clone();
+
         STOP_THREADS.store(false, Ordering::SeqCst);
         CURRENT_SEARCH_DEPTH.store(0, Ordering::Relaxed);
 
-        // Hard Stop the search if time if over
+        // Stop the search if time if over
         std::thread::spawn(move || {
             std::thread::park_timeout(timeout);
-            STOP_THREADS.store(true, Ordering::SeqCst);
+
+            soft_stop_copy.store(true, Ordering::SeqCst);
+
+            // if at least depth 6 is searched hard stop
+            if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 4 {
+                STOP_THREADS.store(true, Ordering::SeqCst);
+            }
+
+
         });
 
         let mut best_move: Option<ChessMove> = None;
-        for current_depth in (2..255).step_by(2) {
+        for current_depth in (4..255).step_by(2) {
             CURRENT_SEARCH_DEPTH.store(current_depth, Ordering::Relaxed);
 
             let (new_best_move, score) = self.alpha_beta_search(current_depth, evaluated_positions.clone());
@@ -83,7 +94,12 @@ impl Engine {
             }
 
             // The current layer has been stopped before the calculation finished
-            if STOP_THREADS.load(Ordering::SeqCst) || new_best_move.is_none() {
+            let hard_stop = STOP_THREADS.load(Ordering::SeqCst);
+
+            // Time is up, but calculation has not been representative
+            let soft_stop = soft_stop.load(Ordering::SeqCst);
+
+            if hard_stop || new_best_move.is_none() {
                 break;
             }
 
@@ -94,9 +110,11 @@ impl Engine {
             if score.abs() > MATE_SCORE - 1_000 {
                 break;
             }
-        }
 
-        // std::thread::sleep(Duration::from_secs(100));
+            if current_depth >= 4 && soft_stop {
+                break;
+            }
+        }
 
         best_move.expect("Could not find a good move...")
 

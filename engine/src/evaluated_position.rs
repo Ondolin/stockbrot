@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use chashmap::CHashMap;
 use chess::Board;
-use crate::evaluate::MATE_SCORE;
+use crate::evaluation::MATE_SCORE;
 use crate::search::CURRENT_SEARCH_DEPTH;
 
 #[derive(Clone)]

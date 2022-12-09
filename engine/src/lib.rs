@@ -9,10 +9,10 @@ use std::time::Duration;
 use chashmap::CHashMap;
 use chess::{Board, ChessMove, Color, Error, Game, MoveGen};
 
-use crate::evaluate::evaluate;
+use crate::evaluation::evaluate;
 use crate::evaluated_position::EvaluatedPositions;
 
-mod evaluate;
+mod evaluation;
 mod search;
 mod quiesce_search;
 mod evaluated_position;

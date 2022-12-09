@@ -1,5 +1,5 @@
 use chess::{Board, MoveGen};
-use crate::evaluate::evaluate;
+use crate::evaluation::evaluate;
 
 pub fn quiesce_search_max(board: Board, mut alpha: i32, mut beta: i32) -> i32 {
 
