@@ -12,6 +12,9 @@ log = "0.4.17"
 rayon = "1.6.0"
 chashmap = "2.2.2"
 
+opening_db = { path = "../opening_db" }
+opening_db_types = { path = "../opening_db_types" }
+
 [profile.release]
 opt-level = 3
 

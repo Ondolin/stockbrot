@@ -2,7 +2,9 @@
 
 members = [
     "engine",
-    "lichess"
+    "lichess",
+    "opening_db",
+    "opening_db_types"
 ]
 
 [profile.release]

@@ -74,7 +74,7 @@ impl Engine {
             soft_stop_copy.store(true, Ordering::SeqCst);
 
             // if at least depth 6 is searched hard stop
-            if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 4 {
+            if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 2 {
                 STOP_THREADS.store(true, Ordering::SeqCst);
             }
 
@@ -82,7 +82,7 @@ impl Engine {
         });
 
         let mut best_move: Option<ChessMove> = None;
-        for current_depth in (4..255).step_by(2) {
+        for current_depth in (2..255).step_by(2) {
             CURRENT_SEARCH_DEPTH.store(current_depth, Ordering::Relaxed);
 
             let (new_best_move, score) = self.alpha_beta_search(current_depth, evaluated_positions.clone());
@@ -109,7 +109,7 @@ impl Engine {
                 break;
             }
 
-            if current_depth >= 4 && soft_stop {
+            if soft_stop {
                 break;
             }
         }

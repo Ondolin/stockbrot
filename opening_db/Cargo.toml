@@ -1,0 +1,15 @@
+[package]
+name = "opening_db"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+build_const = "0.2.2"
+opening_db_types = { path = "../opening_db_types" }
+
+[build-dependencies]
+build_const = "0.2.2"
+opening_db_types = { path = "../opening_db_types" }
+shakmaty = "0.23.0"
