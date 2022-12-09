@@ -1,8 +1,6 @@
-use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::Duration;
-use atomic_float::AtomicF32;
 use chess::{Board, BoardStatus, ChessMove, Color, EMPTY, MoveGen};
 use crate::{Engine, EvaluatedPositions};
 
@@ -17,7 +15,7 @@ pub static CURRENT_SEARCH_DEPTH: AtomicU8 = AtomicU8::new(0);
 impl Engine {
     pub fn alpha_beta_search(&self, max_depth: u8, evaluated_positions: Arc<RwLock<EvaluatedPositions>>) -> (Option<ChessMove>, i32) {
 
-        let mut best_move: RwLock<(Option<ChessMove>, i32)> =
+        let best_move: RwLock<(Option<ChessMove>, i32)> =
             RwLock::new((
                 None,
                 if self.game.side_to_move() == Color::White { i32::MIN } else { i32::MAX }

@@ -7,13 +7,10 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
-lazy_static = "1.4.0"
 chess = "3.2.0"
 log = "0.4.17"
 rayon = "1.6.0"
 chashmap = "2.2.2"
-
-atomic_float = "0.1.0"
 
 [profile.release]
 opt-level = 3

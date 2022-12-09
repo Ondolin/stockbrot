@@ -1,15 +1,9 @@
-#[macro_use]
-extern crate lazy_static;
-
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 use chashmap::CHashMap;
-use chess::{Board, ChessMove, Color, Error, Game, MoveGen};
+use chess::{ChessMove, Color, Game};
 
-use crate::evaluation::evaluate;
 use crate::evaluated_position::EvaluatedPositions;
 
 mod evaluation;

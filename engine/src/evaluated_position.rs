@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use chashmap::CHashMap;
 use chess::Board;
@@ -33,7 +32,7 @@ pub trait EvaluatedPositionsFunctions {
 
 impl EvaluatedPositionsFunctions for Arc<RwLock<EvaluatedPositions>> {
 
-    fn get_or_calculate<F>(&self, board: Board, depth: u8, mut calculate: F) -> i32
+    fn get_or_calculate<F>(&self, board: Board, depth: u8, calculate: F) -> i32
         where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> i32 {
 
         let hash = board.get_hash();

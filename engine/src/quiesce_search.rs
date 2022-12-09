@@ -1,7 +1,7 @@
 use chess::{Board, MoveGen};
 use crate::evaluation::evaluate;
 
-pub fn quiesce_search_max(board: Board, mut alpha: i32, mut beta: i32) -> i32 {
+pub fn quiesce_search_max(board: Board, mut alpha: i32, beta: i32) -> i32 {
 
     let mut iterable = MoveGen::new_legal(&board);
     let targets = board.color_combined(!board.side_to_move());
@@ -29,7 +29,7 @@ pub fn quiesce_search_max(board: Board, mut alpha: i32, mut beta: i32) -> i32 {
     value
 }
 
-pub fn quiesce_search_min(board: Board, mut alpha: i32, mut beta: i32) -> i32 {
+pub fn quiesce_search_min(board: Board, alpha: i32, mut beta: i32) -> i32 {
 
     let mut iterable = MoveGen::new_legal(&board);
     let targets = board.color_combined(!board.side_to_move());
