@@ -59,24 +59,24 @@ fn score_board(board: &Board) -> i32 {
                     let bonus = connected_bonus(&white_pawns, &black_pawns, square, color);
 
                     let transposed_rank = if color == Color::White {
-                        field.get_rank().to_index()
+                        square.get_rank().to_index()
                     } else {
-                        7 - field.get_rank().to_index()
+                        7 - square.get_rank().to_index()
                     };
 
                     mg_score += color_multiplier(&color) * bonus;
-                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4);
+                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4) as i32;
                 } else {
                     let bonus = connected_bonus(&black_pawns, &white_pawns, square, color);
 
                     let transposed_rank = if color == Color::White {
-                        field.get_rank().to_index()
+                        square.get_rank().to_index()
                     } else {
-                        7 - field.get_rank().to_index()
+                        7 - square.get_rank().to_index()
                     };
 
                     mg_score += color_multiplier(&color) * bonus;
-                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4);
+                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4) as i32;
                 }
             }
 
