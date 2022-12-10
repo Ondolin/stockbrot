@@ -28,7 +28,7 @@ struct GamePlayer {
 
 impl GamePlayer {
     fn is_me(&self) -> bool {
-        self.id == Some("stockbrotengine".to_string())
+        self.id == Some(dotenv::var("LICHESS_USERNAME").unwrap())
     }
 }
 
