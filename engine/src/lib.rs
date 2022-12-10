@@ -69,12 +69,12 @@ impl Engine {
     pub fn get_engine_move(&mut self) -> String {
         log::info!("Generating move...");
 
-       /* if let Some(opening_book) = &self.opening_db_node {
+       if let Some(opening_book) = &self.opening_db_node {
             if let Some(opening_move) = opening_book.get_best_move() {
                 log::info!("Opening DB move: {opening_move}");
                 return opening_move;
             }
-        }*/
+        }
 
         let joice = self.iterative_deepening(self.search_data.clone(), Duration::from_secs(8)).to_string();
 
