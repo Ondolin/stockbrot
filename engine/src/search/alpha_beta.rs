@@ -12,8 +12,6 @@ use crate::search::{SearchData, STOP_THREADS};
 impl Engine {
     pub fn alpha_beta_search(&self, max_depth: u8, search_data: Arc<SearchData>) -> (Option<ChessMove>, i32) {
 
-        // dbg!(&search_data.positions_visited);
-
         let best_move: RwLock<(Option<ChessMove>, i32)> =
             RwLock::new((
                 None,
@@ -69,9 +67,6 @@ impl Engine {
 
 pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, search_data: Arc<SearchData>) -> i32 {
     // leaf node
-    /*if depth_left == 0 || board.status() != BoardStatus::Ongoing { return evaluated_positions.get_or_calculate(board, depth_left, |_| {
-        quiesce_search_max(board, i32::MIN, i32::MAX)
-    } ) }*/
     if depth_left == 0 || board.status() != BoardStatus::Ongoing {
         return quiesce_search_max(board, alpha, beta);
     }
@@ -104,10 +99,6 @@ pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, s
 
 pub fn alpha_beta_min(board: Board, alpha: i32, mut beta: i32, depth_left: u8, search_data: Arc<SearchData>) -> i32 {
     // leaf node
-    /*if depth_left == 0 || board.status() != BoardStatus::Ongoing { return evaluated_positions.get_or_calculate(board, depth_left, |_| {
-        quiesce_search_min(board, i32::MIN, i32::MAX)
-    } ) }*/
-
     if depth_left == 0 || board.status() != BoardStatus::Ongoing {
         return quiesce_search_min(board, alpha, beta);
     }
