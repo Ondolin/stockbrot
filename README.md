@@ -6,6 +6,14 @@
 
 This project contains an Open Source chess engine written in pure rust.
 
+## How to use Stockbrot?
+
+First read the content in the Opening DB section.
+
+Copy the content of `.env.example` to a `.env` file and populate its fields.
+
+To use the engine run `just run`.
+
 ## Lichess integration
 
 To make it easier to play against Stockbrot there is an integration with the Lichess API.  

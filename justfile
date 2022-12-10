@@ -6,3 +6,6 @@ generate-opening-db DEPTH:
 
 generate-empty-opening-db:
     cp $(pwd)/opening_db/src/node_map_default.rs $(pwd)/opening_db/src/node_map.rs
+
+run:
+    cargo run --release
