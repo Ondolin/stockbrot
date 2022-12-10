@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -9,7 +12,7 @@ use opening_db_types::Node as OpeningDBNode;
 
 use crate::evaluated_position::EvaluatedPositions;
 
-mod evaluation;
+pub mod evaluation;
 mod search;
 mod quiesce_search;
 mod evaluated_position;

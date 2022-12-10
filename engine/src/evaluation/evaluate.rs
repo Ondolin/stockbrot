@@ -1,10 +1,13 @@
+use test::Bencher;
+
 use chess::{ALL_SQUARES, Board, BoardStatus, Color};
 use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value};
 
 pub fn evaluate(board: &Board) -> i32 {
 
-    if board.status() == BoardStatus::Stalemate { return 0 }
-    if board.status() == BoardStatus::Checkmate { return if board.side_to_move() == Color::Black { MATE_SCORE } else { -MATE_SCORE } }
+    let game_status = board.status();
+    if game_status == BoardStatus::Stalemate { return 0 }
+    if game_status == BoardStatus::Checkmate { return if board.side_to_move() == Color::Black { MATE_SCORE } else { -MATE_SCORE } }
 
     score_board(board)
 
@@ -20,13 +23,20 @@ fn score_board(board: &Board) -> i32 {
     // gamephase is determined by the amount of pieces present
     let mut game_phase = 0;
 
-    for i in 0..64u8 {
-        let pos = ALL_SQUARES[i as usize];
-        if let Some(piece) = board.piece_on(pos) {
-            mg_score += mg_value(&board.piece_on(pos).unwrap(), board.color_on(pos).unwrap(), i);
-            eg_score += eg_value(&board.piece_on(pos).unwrap(), board.color_on(pos).unwrap(), i);
+    let b = board.combined().0;
+    for i in 0..64u64 {
+        if b & (1 << i) != 0 {
+            let square = ALL_SQUARES[i as usize];
 
-            game_phase += game_phase_inc(&piece);
+            let p = board.piece_on(square).unwrap();
+            let c = board.color_on(square).unwrap();
+
+            let i = i as u8;
+
+            mg_score += mg_value(&p,  c, i);
+            eg_score += eg_value(&p, c, i);
+
+            game_phase += game_phase_inc(&p);
         }
     }
 
@@ -37,4 +47,17 @@ fn score_board(board: &Board) -> i32 {
 
     (mg_score * mg_phase + eg_score * eg_phase) / 24
 
+}
+
+#[bench]
+fn evaluation_speed(b: &mut Bencher) {
+    use std::str::FromStr;
+    use chess::ChessMove;
+
+    let board = Board::from_str("7k/1R6/R7/8/8/8/8/K7 w - - 0 1").unwrap();
+    let board = board.make_move_new(ChessMove::from_str("a6a8").unwrap());
+
+    b.iter(|| {
+        evaluate(&board);
+    });
 }
