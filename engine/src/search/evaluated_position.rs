@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use chashmap::CHashMap;
 use chess::Board;
 use crate::evaluation::MATE_SCORE;
-use crate::search::CURRENT_SEARCH_DEPTH;
+use crate::search::{CURRENT_SEARCH_DEPTH, SearchData};
 
 #[derive(Clone)]
 pub struct EvaluatedPosition {
@@ -27,17 +27,17 @@ impl PartialOrd<Self> for EvaluatedPosition {
 pub type EvaluatedPositions = CHashMap<u64, EvaluatedPosition>;
 
 pub trait EvaluatedPositionsFunctions {
-    fn get_or_calculate<F>(&self, board: Board, depth: u8, calculate: F) -> i32 where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> i32;
+    fn get_or_calculate_evaluation<F>(&self, board: Board, depth: u8, calculate: F) -> i32 where F: Fn(Arc<SearchData>) -> i32;
 }
 
-impl EvaluatedPositionsFunctions for Arc<RwLock<EvaluatedPositions>> {
+impl EvaluatedPositionsFunctions for Arc<SearchData> {
 
-    fn get_or_calculate<F>(&self, board: Board, depth: u8, calculate: F) -> i32
-        where F: Fn(Arc<RwLock<EvaluatedPositions>>) -> i32 {
+    fn get_or_calculate_evaluation<F>(&self, board: Board, depth: u8, calculate: F) -> i32
+        where F: Fn(Arc<SearchData>) -> i32 {
 
         let hash = board.get_hash();
 
-        if let Some(old) = { self.read().unwrap().get(&hash) } {
+        if let Some(old) = self.evaluated_positions.get(&hash) {
             // we have a better value in the database
             if old.depth >= depth {
                 return old.evaluation;
@@ -55,7 +55,7 @@ impl EvaluatedPositionsFunctions for Arc<RwLock<EvaluatedPositions>> {
             evaluation += max_search_depth - depth as i32;
         }
 
-        self.read().unwrap().insert(hash, EvaluatedPosition {
+        self.evaluated_positions.insert(hash, EvaluatedPosition {
             board,
             evaluation,
             depth

@@ -53,7 +53,7 @@ impl Node {
         let best = self.children.iter().max();
 
         if let Some(best) = best {
-            if best.0 < 2 {
+            if best.0 <= 2 {
                 return None;
             }
         }

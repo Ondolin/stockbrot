@@ -10,26 +10,29 @@ use chess::{ChessMove, Color, Game};
 use opening_db::NODE_MAP;
 use opening_db_types::Node as OpeningDBNode;
 
-use crate::evaluated_position::EvaluatedPositions;
+use search::evaluated_position::EvaluatedPositions;
+use crate::search::SearchData;
 
 pub mod evaluation;
 mod search;
-mod quiesce_search;
-mod evaluated_position;
 
 pub struct Engine {
     game: Game,
-    evaluated_positions: Arc<RwLock<EvaluatedPositions>>,
+    search_data: Arc<SearchData>,
     opening_db_node: Option<OpeningDBNode>
 }
 
 impl Engine {
     pub fn new() -> Engine {
-        Engine {
+        let e = Engine {
             game: Game::new(),
-            evaluated_positions: Arc::new(RwLock::new(CHashMap::new())),
+            search_data: Arc::new(SearchData::new()),
             opening_db_node: Some(NODE_MAP)
-        }
+        };
+
+        e.search_data.visit_position(&e.game.current_position());
+
+        e
     }
 
     pub fn get_position(&self) -> String {
@@ -41,6 +44,7 @@ impl Engine {
         match game {
             Ok(game) => {
                 self.game = game;
+                self.search_data.visit_position(&self.game.current_position());
                 Ok(())
             },
             Err(_) => Err(())
@@ -58,19 +62,21 @@ impl Engine {
         log::info!("Made move {:?}", joice.to_string());
 
         self.game.make_move(joice);
+
+        self.search_data.visit_position(&self.game.current_position());
     }
 
     pub fn get_engine_move(&mut self) -> String {
         log::info!("Generating move...");
 
-        if let Some(opening_book) = &self.opening_db_node {
+       /* if let Some(opening_book) = &self.opening_db_node {
             if let Some(opening_move) = opening_book.get_best_move() {
                 log::info!("Opening DB move: {opening_move}");
                 return opening_move;
             }
-        }
+        }*/
 
-        let joice = self.iterative_deepening(self.evaluated_positions.clone(), Duration::from_secs(8)).to_string();
+        let joice = self.iterative_deepening(self.search_data.clone(), Duration::from_secs(8)).to_string();
 
         log::warn!("Engine Move: {joice}");
         log::warn!("Pos: {}", self.game.current_position().to_string());
