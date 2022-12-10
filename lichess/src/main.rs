@@ -37,7 +37,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             open_games.first().unwrap().clone()
         };
 
-        listen_to_game(current_game).await
+        log::info!("Started Game.");
+
+        listen_to_game(current_game).await;
+
+        log::info!("Game completed.");
 
     }
 
