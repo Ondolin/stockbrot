@@ -5,12 +5,12 @@ use std::time::Duration;
 use dotenv;
 use env_logger::Env;
 
-mod game_stream;
+mod event_stream;
 mod game;
 
-use game_stream::StreamEvent;
+use event_stream::StreamEvent;
 use crate::game::listen_to_game;
-use crate::game_stream::stream_game_updates;
+use crate::event_stream::stream_game_updates;
 
 
 #[tokio::main]
