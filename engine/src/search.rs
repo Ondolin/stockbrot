@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::Duration;
-use chess::{Board, BoardStatus, ChessMove, Color, EMPTY, MoveGen};
+use chess::{Board, BoardStatus, ChessMove, Color, EMPTY, MoveGen, Piece};
 use crate::{Engine, EvaluatedPositions};
 
 use rayon::prelude::*;
@@ -74,7 +74,7 @@ impl Engine {
             soft_stop_copy.store(true, Ordering::SeqCst);
 
             // if at least depth 6 is searched hard stop
-            if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 2 {
+            if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 1 {
                 STOP_THREADS.store(true, Ordering::SeqCst);
             }
 
@@ -82,7 +82,7 @@ impl Engine {
         });
 
         let mut best_move: Option<ChessMove> = None;
-        for current_depth in (2..255).step_by(2) {
+        for current_depth in (1..255).step_by(1) {
             CURRENT_SEARCH_DEPTH.store(current_depth, Ordering::Relaxed);
 
             let (new_best_move, score) = self.alpha_beta_search(current_depth, evaluated_positions.clone());
@@ -120,6 +120,17 @@ impl Engine {
 
 }
 
+fn piece_type(p: &Piece) -> u8 {
+    match p {
+        Piece::Pawn => 1,
+        Piece::Knight => 2,
+        Piece::Bishop => 3,
+        Piece::Rook => 4,
+        Piece::Queen => 5,
+        Piece::King => 10
+    }
+}
+
 // put captures before other moves
 pub fn get_move_order(board: &Board) -> Vec<ChessMove> {
     let mut moves = MoveGen::new_legal(&board);
@@ -127,6 +138,24 @@ pub fn get_move_order(board: &Board) -> Vec<ChessMove> {
     moves.set_iterator_mask(*targets);
 
     let mut moves_in_order = moves.by_ref().collect::<Vec<ChessMove>>();
+    moves_in_order.sort_by(|a, b| {
+        let a_type = board.piece_on(a.get_source()).unwrap();
+        let b_type = board.piece_on(b.get_source()).unwrap();
+
+        // If a is a lesser piece use it first
+        if piece_type(&a_type) < piece_type(&b_type) { return core::cmp::Ordering::Greater }
+        else if piece_type(&a_type) > piece_type(&b_type) { return core::cmp::Ordering::Less }
+
+        let a_target = board.piece_on(a.get_dest()).unwrap();
+        let b_target = board.piece_on(b.get_dest()).unwrap();
+
+        // Capture high value pieces first
+        if piece_type(&a_target) > piece_type(&b_target) { return core::cmp::Ordering::Greater }
+        else if piece_type(&a_target) < piece_type(&b_target) { return core::cmp::Ordering::Less }
+
+        core::cmp::Ordering::Equal
+    });
+
     moves.set_iterator_mask(!EMPTY);
     let mut second_half = moves.collect::<Vec<ChessMove>>();
     moves_in_order.append(&mut second_half);
