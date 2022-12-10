@@ -1,7 +1,7 @@
 use test::Bencher;
 
-use chess::{ALL_SQUARES, Board, BoardStatus, Color};
-use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value, piece_mobility};
+use chess::{ALL_SQUARES, Board, BoardStatus, Color, Piece};
+use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value, piece_mobility, connected_bonus};
 
 pub fn evaluate(board: &Board) -> i32 {
 
@@ -33,6 +33,9 @@ fn score_board(board: &Board) -> i32 {
     let bitboard = board.combined();
     let b = bitboard.0;
 
+    let white_pawns = board.pieces(Piece::Pawn) & board.color_combined(Color::White);
+    let black_pawns = board.pieces(Piece::Pawn) & board.color_combined(Color::Black);
+
     for i in 0..64u64 {
         if b & (1 << i) != 0 {
             let square = ALL_SQUARES[i as usize];
@@ -45,11 +48,37 @@ fn score_board(board: &Board) -> i32 {
             eg_score += eg_value(&piece, color, i as u8);
 
             // Mobility bonus
-
             let (mg_piece_mobility, eg_piece_mobility) = piece_mobility(&piece, *bitboard, square);
 
             mg_score += color_multiplier(&color) * mg_piece_mobility;
             eg_score += color_multiplier(&color) * eg_piece_mobility;
+
+            // Pawn bonus
+            if piece == Piece::Pawn {
+                if color == Color::White {
+                    let bonus = connected_bonus(&white_pawns, &black_pawns, square, color);
+
+                    let transposed_rank = if color == Color::White {
+                        field.get_rank().to_index()
+                    } else {
+                        7 - field.get_rank().to_index()
+                    };
+
+                    mg_score += color_multiplier(&color) * bonus;
+                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4);
+                } else {
+                    let bonus = connected_bonus(&black_pawns, &white_pawns, square, color);
+
+                    let transposed_rank = if color == Color::White {
+                        field.get_rank().to_index()
+                    } else {
+                        7 - field.get_rank().to_index()
+                    };
+
+                    mg_score += color_multiplier(&color) * bonus;
+                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4);
+                }
+            }
 
             game_phase += game_phase_inc(&piece);
         }
