@@ -1,15 +1,5 @@
 use chess::{BitBoard, Board, Color, get_file, Piece, Square};
-
-const RANK_BLOCKS: [BitBoard; 8] = [
-    BitBoard(255),
-    BitBoard(65535),
-    BitBoard(16777215),
-    BitBoard(4294967295),
-    BitBoard(1099511627775),
-    BitBoard(281474976710655),
-    BitBoard(72057594037927935),
-    BitBoard(18446744073709551615),
-];
+use crate::evaluation::pawn::RANK_BLOCKS;
 
 const BONUS_SEED: [i32; 7] = [0, 7, 8, 12, 29, 48, 86];
 

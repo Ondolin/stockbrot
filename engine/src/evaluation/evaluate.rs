@@ -1,7 +1,8 @@
 use test::Bencher;
 
 use chess::{ALL_SQUARES, Board, BoardStatus, Color, Piece};
-use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value, piece_mobility, connected_bonus};
+use chess::Color::White;
+use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value, piece_mobility, connected_bonus, double_isolated};
 
 pub fn evaluate(board: &Board) -> i32 {
 
@@ -54,29 +55,33 @@ fn score_board(board: &Board) -> i32 {
             eg_score += color_multiplier(&color) * eg_piece_mobility;
 
             // Pawn bonus
+
             if piece == Piece::Pawn {
-                if color == Color::White {
-                    let bonus = connected_bonus(&white_pawns, &black_pawns, square, color);
 
-                    let transposed_rank = if color == Color::White {
-                        square.get_rank().to_index()
-                    } else {
-                        7 - square.get_rank().to_index()
-                    };
+                let my_pawns = if color == Color::White { &white_pawns } else { &black_pawns };
+                let other_pawns = if color == Color::White { &black_pawns } else { &white_pawns };
 
-                    mg_score += color_multiplier(&color) * bonus;
-                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4) as i32;
+                // Connectivity
+                let bonus = connected_bonus(&my_pawns, &other_pawns, square, color);
+
+                let transposed_rank = if color == Color::White {
+                    square.get_rank().to_index()
                 } else {
-                    let bonus = connected_bonus(&black_pawns, &white_pawns, square, color);
+                    7 - square.get_rank().to_index()
+                };
 
-                    let transposed_rank = if color == Color::White {
-                        square.get_rank().to_index()
-                    } else {
-                        7 - square.get_rank().to_index()
-                    };
+                mg_score += color_multiplier(&color) * bonus;
+                eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4) as i32;
 
-                    mg_score += color_multiplier(&color) * bonus;
-                    eg_score += color_multiplier(&color) * bonus * ((transposed_rank - 2) / 4) as i32;
+
+                // Isolated
+                let isolation = double_isolated(&my_pawns, square);
+                if isolation >= 2 {
+                    mg_score -= color_multiplier(&color) * 11;
+                    eg_score -= color_multiplier(&color) * 56;
+                } else if isolation >= 1 {
+                    mg_score -= color_multiplier(&color) * 5;
+                    eg_score -= color_multiplier(&color) * 15;
                 }
             }
 
