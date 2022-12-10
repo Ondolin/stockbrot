@@ -1,21 +1,15 @@
-use std::collections::HashMap;
-use std::{env, fs};
+use std::env;
 use std::fs::File;
 use std::path::Path;
-use build_const::ConstWriter;
-use std::io::{self, prelude::*, BufReader};
-use shakmaty::{CastlingMode, Move};
+use std::io::{prelude::*, BufReader};
+use shakmaty::CastlingMode;
 use shakmaty::san::SanPlus;
-use opening_db_types::{BuildNode, Node, NodeCount};
+use opening_db_types::{BuildNode};
 
 fn main() {
 
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let mod_name = format!("NodeMap.rs");
-    let dest_path = Path::new(&out_dir).join(mod_name);
+    let dest_path = Path::new("node_map.rs");
     let mut file = File::create(&dest_path).unwrap();
-
-    // write!(file, "pub use opening_db_types::Node; \n").unwrap();
 
     let mut root = BuildNode::new("".to_string());
 
@@ -48,7 +42,7 @@ fn main() {
 }
 
 fn add_sub_node(root: &mut BuildNode) {
-    use shakmaty::{Chess, Position, san::San};
+    use shakmaty::{Chess, Position};
 
     let file = File::open("opening_db.pgn").unwrap();
     let reader = BufReader::new(file);
@@ -103,7 +97,7 @@ fn add_sub_node(root: &mut BuildNode) {
 
         db_depth += 1;
 
-        if db_depth > 5000 {
+        if db_depth > env::var("DB_SIZE").unwrap().parse().unwrap() {
             return;
         }
 

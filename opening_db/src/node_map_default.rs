@@ -1,0 +1,1 @@
+pub const MAP: opening_db_types::Node = opening_db_types::Node { joice: "", children: &[] };
