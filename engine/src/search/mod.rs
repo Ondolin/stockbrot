@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU8};
 use std::sync::RwLock;
 use chashmap::CHashMap;
-use chess::Board;
+use chess::{Board, ChessMove};
 use crate::search::evaluated_position::EvaluatedPositions;
 
 mod move_order;
@@ -16,14 +16,16 @@ pub static CURRENT_SEARCH_DEPTH: AtomicU8 = AtomicU8::new(0);
 
 pub struct SearchData {
     evaluated_positions: EvaluatedPositions,
-    positions_visited: RwLock<HashMap<u64, u8>>
+    positions_visited: RwLock<HashMap<u64, u8>>,
+    best_moves: CHashMap<u64, ChessMove>
 }
 
 impl SearchData {
     pub fn new() -> SearchData {
         SearchData {
             evaluated_positions: CHashMap::new(),
-            positions_visited: RwLock::new(HashMap::new())
+            positions_visited: RwLock::new(HashMap::new()),
+            best_moves: CHashMap::new()
         }
     }
 
