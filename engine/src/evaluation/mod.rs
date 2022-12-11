@@ -2,6 +2,7 @@ mod evaluate;
 mod piece_sq_tables;
 mod mobility;
 mod pawn;
+mod helper;
 
 pub const MATE_SCORE: i32 = 1_000_000;
 
