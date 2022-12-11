@@ -1,3 +1,4 @@
+use std::time::Duration;
 use chess::Color;
 use serde::{Deserialize, Serialize};
 use engine::Engine;
@@ -121,9 +122,12 @@ pub async fn listen_to_game(game_id: String) {
 
 async fn post_move(client: &reqwest::Client, game_id: String, engine_move: String) {
     // post move
-    client.post(format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, engine_move))
+    while let Err(e) = client.post(format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, engine_move))
         .bearer_auth(dotenv::var("LICHESS_TOKEN").unwrap())
         .send()
         .await
-        .unwrap();
+    {
+        log::error!("{}", e);
+        std::thread::sleep(Duration::from_secs(1));
+    }
 }
