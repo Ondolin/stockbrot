@@ -63,7 +63,13 @@ fn add_sub_node(root: &mut BuildNode) {
         let mut iter = line.split(".");
         iter.next();
 
+        let mut line_length = 0;
+
         for turn in iter {
+
+            line_length += 1;
+            if line_length >= 12 { break; }
+
             let mut turn = turn.split(" ");
             turn.next();
 
