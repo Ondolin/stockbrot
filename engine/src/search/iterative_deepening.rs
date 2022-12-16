@@ -30,6 +30,8 @@ impl Engine {
 
         });
 
+        let start_time = std::time::Instant::now();
+
         let mut best_move: Option<ChessMove> = None;
         for current_depth in (1..255).step_by(1) {
             CURRENT_SEARCH_DEPTH.store(current_depth, Ordering::Relaxed);
@@ -61,6 +63,8 @@ impl Engine {
             if soft_stop {
                 break;
             }
+
+            log::error!("Time elaps: {}", start_time.elapsed().as_micros());
         }
 
         best_move.expect("Could not find a good move...")

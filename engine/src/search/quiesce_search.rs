@@ -3,6 +3,10 @@ use crate::evaluation::evaluate;
 
 pub fn quiesce_search_max(board: Board, mut alpha: i32, beta: i32) -> i32 {
 
+    let stand_pat = evaluate(&board);
+    if stand_pat >= beta { return beta; }
+    if stand_pat > alpha { alpha = stand_pat; }
+
     let mut iterable = MoveGen::new_legal(&board);
     let targets = board.color_combined(!board.side_to_move());
     iterable.set_iterator_mask(*targets);
@@ -30,6 +34,10 @@ pub fn quiesce_search_max(board: Board, mut alpha: i32, beta: i32) -> i32 {
 }
 
 pub fn quiesce_search_min(board: Board, alpha: i32, mut beta: i32) -> i32 {
+
+    let stand_pat = evaluate(&board);
+    if stand_pat <= alpha { return alpha; }
+    if stand_pat < beta { beta = stand_pat; }
 
     let mut iterable = MoveGen::new_legal(&board);
     let targets = board.color_combined(!board.side_to_move());
