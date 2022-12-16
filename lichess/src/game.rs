@@ -40,7 +40,9 @@ enum GameState {
     StateEvent {
         moves: String,
         wtime: u32,
-        btime: u32
+        winc: u32,
+        btime: u32,
+        binc: u32
     },
     #[serde(rename = "chatLine")]
     ChatEvent {},
@@ -64,7 +66,7 @@ pub async fn listen_to_game(game_id: String) {
         let game_info: GameInfo = serde_json::from_slice(&chunk).unwrap();
 
         match game_info.state {
-            GameState::StateEvent { ref moves, .. } => {
+            GameState::StateEvent { ref moves, wtime, btime, winc, binc } => {
 
                 if let Some(fen) = &game_info.initial_fen {
                     if fen != "startpos" {
@@ -80,8 +82,20 @@ pub async fn listen_to_game(game_id: String) {
 
                 log::info!("Loaded Game: {}", engine.get_position());
 
-                if engine.is_my_turn(game_info.my_color()) {
-                    post_move(&client, game_id.clone(), engine.get_engine_move()).await;
+                let my_color = game_info.my_color();
+
+                if engine.is_my_turn(my_color) {
+
+                    let (time_left, inc) = match my_color {
+                        Color::White => (wtime, winc),
+                        Color::Black => (btime, binc)
+                    };
+                    let time_left = Duration::from_millis(time_left as u64);
+                    let inc = Duration::from_millis(inc as u64);
+
+                    let recommended_timeout = engine.recommended_timeout(time_left, inc);
+
+                    post_move(&client, game_id.clone(), engine.get_engine_move(recommended_timeout)).await;
                 }
 
 
@@ -99,16 +113,28 @@ pub async fn listen_to_game(game_id: String) {
             let game_state: GameState = serde_json::from_slice(&chunk).unwrap();
 
             match game_state {
-                GameState::StateEvent { moves, .. } => {
+                GameState::StateEvent { moves, wtime, btime, winc, binc } => {
 
                     let moves: Vec<&str> = moves.split(' ').collect();
 
                     // update move in engine
                     engine.make_move(moves.last().unwrap().to_string());
 
+                    let my_color = game_info.my_color();
+
                     // check if it is our move
-                    if engine.is_my_turn(game_info.my_color()) {
-                        post_move(&client, game_id.clone(), engine.get_engine_move()).await;
+                    if engine.is_my_turn(my_color) {
+
+                        let (time_left, inc) = match my_color {
+                            Color::White => (wtime, winc),
+                            Color::Black => (btime, binc)
+                        };
+                        let time_left = Duration::from_millis(time_left as u64);
+                        let inc = Duration::from_millis(inc as u64);
+
+                        let recommended_timeout = engine.recommended_timeout(time_left, inc);
+
+                        post_move(&client, game_id.clone(), engine.get_engine_move(recommended_timeout)).await;
                     }
 
                 },
