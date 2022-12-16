@@ -2,8 +2,7 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 use chashmap::CHashMap;
 use chess::Board;
-use crate::evaluation::MATE_SCORE;
-use crate::search::{CURRENT_SEARCH_DEPTH, SearchData};
+use crate::search::SearchData;
 
 #[derive(Clone)]
 pub struct EvaluatedPosition {
@@ -44,16 +43,7 @@ impl EvaluatedPositionsFunctions for Arc<SearchData> {
             }
         }
 
-        let mut evaluation = calculate(self.clone());
-
-        let max_search_depth = CURRENT_SEARCH_DEPTH.load(core::sync::atomic::Ordering::Relaxed) as i32;
-
-        // shorter mate has high score
-        if evaluation == MATE_SCORE {
-            evaluation -= max_search_depth - depth as i32;
-        } else if evaluation == -MATE_SCORE {
-            evaluation += max_search_depth - depth as i32;
-        }
+        let evaluation = calculate(self.clone());
 
         self.evaluated_positions.insert(hash, EvaluatedPosition {
             board,

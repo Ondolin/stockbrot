@@ -7,6 +7,7 @@ use crate::search::quiesce_search::{quiesce_search_max, quiesce_search_min};
 use crate::search::move_order::get_move_order;
 
 use rayon::prelude::*;
+use crate::evaluation::CONSIDERED_MATE;
 use crate::search::{SearchData, STOP_THREADS};
 
 impl Engine {
@@ -23,6 +24,9 @@ impl Engine {
             ));
 
         let moves = MoveGen::new_legal(&self.game.current_position()).collect::<Vec<ChessMove>>();
+
+        if moves.len() == 1 { return (Some(moves[0]), 0) }
+
         moves.par_iter().for_each(|joice| {
 
             if STOP_THREADS.load(Ordering::SeqCst) { return; }
@@ -106,6 +110,13 @@ pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, s
         search_data.best_moves.insert(board.get_hash(), best_move);
     }
 
+    // shorter mate has high score
+    if value > CONSIDERED_MATE {
+        value -= 1;
+    } else if value < -CONSIDERED_MATE {
+        value += 1;
+    }
+
     value
 }
 
@@ -141,6 +152,13 @@ pub fn alpha_beta_min(board: Board, alpha: i32, mut beta: i32, depth_left: u8, s
 
     if let Some(best_move) = best_move {
         search_data.best_moves.insert(board.get_hash(), best_move);
+    }
+
+    // shorter mate has high score
+    if value == CONSIDERED_MATE {
+        value -= 1;
+    } else if value == -CONSIDERED_MATE {
+        value += 1;
     }
 
     value

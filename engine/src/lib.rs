@@ -41,6 +41,7 @@ impl Engine {
 
     pub fn load_fen(&mut self, fen: &str) -> Result<(), ()> {
         let game = Game::from_str(fen);
+        self.opening_db_node = None;
         match game {
             Ok(game) => {
                 self.game = game;
