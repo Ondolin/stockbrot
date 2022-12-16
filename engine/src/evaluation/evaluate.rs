@@ -1,7 +1,4 @@
-use test::Bencher;
-
 use chess::{ALL_SQUARES, Board, BoardStatus, Color, Piece};
-use chess::Color::White;
 use crate::evaluation::{game_phase_inc, MATE_SCORE, mg_value, eg_value, piece_mobility, connected_bonus, double_isolated};
 
 pub fn evaluate(board: &Board) -> i32 {
@@ -99,7 +96,7 @@ fn score_board(board: &Board) -> i32 {
 }
 
 #[bench]
-fn evaluation_speed(b: &mut Bencher) {
+fn evaluation_speed(b: &mut test::Bencher) {
     use std::str::FromStr;
     use chess::ChessMove;
 

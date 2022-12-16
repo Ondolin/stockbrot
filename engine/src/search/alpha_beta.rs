@@ -1,9 +1,8 @@
-use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::Ordering;
 use chess::{Board, BoardStatus, ChessMove, Color, MoveGen};
 use crate::Engine;
-use crate::search::evaluated_position::{EvaluatedPositions, EvaluatedPositionsFunctions};
+use crate::search::evaluated_position::EvaluatedPositionsFunctions;
 use crate::search::quiesce_search::{quiesce_search_max, quiesce_search_min};
 use crate::search::move_order::get_move_order;
 

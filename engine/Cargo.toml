@@ -14,9 +14,3 @@ chashmap = "2.2.2"
 
 opening_db = { path = "../opening_db" }
 opening_db_types = { path = "../opening_db_types" }
-
-[profile.release]
-opt-level = 3
-
-[profile.dev]
-opt-level = 3

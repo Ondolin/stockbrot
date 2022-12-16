@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use chashmap::CHashMap;
 use chess::Board;
 use crate::evaluation::MATE_SCORE;

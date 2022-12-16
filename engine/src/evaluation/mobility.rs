@@ -1,4 +1,4 @@
-use chess::{BitBoard, Board, get_bishop_moves, get_knight_moves, get_rook_moves, Piece, Square};
+use chess::{BitBoard, get_bishop_moves, get_knight_moves, get_rook_moves, Piece, Square};
 
 pub fn piece_mobility(p: &Piece, board: BitBoard, field: Square) -> (i32, i32) {
     match p {

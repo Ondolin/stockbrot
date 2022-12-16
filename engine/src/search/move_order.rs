@@ -51,7 +51,7 @@ pub fn get_move_order(board: &Board, search_data: Arc<SearchData>) -> Vec<ChessM
     }
 
     all_moves.set_iterator_mask(!EMPTY);
-    let mut second_half = all_moves.collect::<Vec<ChessMove>>();
+    let second_half = all_moves.collect::<Vec<ChessMove>>();
 
     for joice in &second_half {
         if !moves.contains(joice) {

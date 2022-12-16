@@ -1,4 +1,3 @@
-use std::io;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -8,7 +7,6 @@ use env_logger::Env;
 mod event_stream;
 mod game;
 
-use event_stream::StreamEvent;
 use crate::game::listen_to_game;
 use crate::event_stream::stream_game_updates;
 
@@ -44,9 +42,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         log::info!("Game completed.");
 
     }
-
-    // This loop keeps all threads alive
-    loop {}
-
-    Ok(())
 }

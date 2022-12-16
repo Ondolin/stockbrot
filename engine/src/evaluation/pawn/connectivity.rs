@@ -1,4 +1,4 @@
-use chess::{BitBoard, Board, Color, get_file, Piece, Square};
+use chess::{BitBoard, Color, get_file, Square};
 use crate::evaluation::pawn::RANK_BLOCKS;
 
 const BONUS_SEED: [i32; 7] = [0, 7, 8, 12, 29, 48, 86];

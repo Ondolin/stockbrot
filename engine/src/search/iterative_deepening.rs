@@ -1,9 +1,8 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use chess::ChessMove;
 use crate::Engine;
-use crate::search::evaluated_position::EvaluatedPositions;
 use crate::evaluation::MATE_SCORE;
 use crate::search::{CURRENT_SEARCH_DEPTH, SearchData, STOP_THREADS};
 

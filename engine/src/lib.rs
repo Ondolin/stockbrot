@@ -2,15 +2,13 @@
 extern crate test;
 
 use std::str::FromStr;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::Duration;
-use chashmap::CHashMap;
 use chess::{ChessMove, Color, Game};
 
 use opening_db::NODE_MAP;
 use opening_db_types::Node as OpeningDBNode;
 
-use search::evaluated_position::EvaluatedPositions;
 use crate::search::SearchData;
 
 pub mod evaluation;
