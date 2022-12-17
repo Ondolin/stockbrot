@@ -49,11 +49,21 @@ fn add_sub_node(root: &mut BuildNode) {
 
     let mut db_depth = 0;
 
-    for line in reader.lines() {
+    let mut reader = reader.lines();
 
-        let line = line.unwrap();
+    while let Some(Ok(line)) = reader.next() {
+
+        let mut line = line.clone();
 
         if !line.starts_with("1.") { continue; }
+
+        while let Some(Ok(next)) = reader.next() {
+
+            if next == "".to_string() { break }
+
+            line += &(" ".to_owned() + &next.clone());
+
+        }
 
         if line.contains("{") { continue; }
 
@@ -68,7 +78,7 @@ fn add_sub_node(root: &mut BuildNode) {
         for turn in iter {
 
             line_length += 1;
-            if line_length >= 12 { break; }
+            if line_length >= 18 { break; }
 
             let mut turn = turn.split(" ");
             turn.next();
@@ -109,4 +119,6 @@ fn add_sub_node(root: &mut BuildNode) {
 
 
     }
+
+    println!("db was not big enough, found {} games", db_depth);
 }

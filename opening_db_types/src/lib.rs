@@ -1,3 +1,5 @@
+use rand::Rng;
+
 pub type BuildNodeCount = (u16, BuildNode);
 
 pub type NodeCount = (u16, Node);
@@ -50,15 +52,27 @@ impl BuildNode {
 
 impl Node {
     pub fn get_best_node(&self) -> Option<&NodeCount> {
-        let best = self.children.iter().max();
+        let best = self.children.iter().filter(|a| a.0 >= 2).collect::<Vec<&NodeCount>>();
+        if best.len() == 0 { return None }
 
-        if let Some(best) = best {
-            if best.0 <= 2 {
-                return None;
+        let mut games_in_best = 0;
+        for game in &best {
+            games_in_best += game.0;
+        }
+
+        let mut rng = rand::thread_rng();
+        let mut random_game = rng.gen_range(0..games_in_best);
+
+        for game in best {
+            random_game -= game.0;
+
+            if random_game <= 0 {
+                return Some(game);
             }
         }
 
-        best
+        unreachable!()
+
     }
 
     pub fn get_best_move(&self) -> Option<String> {
