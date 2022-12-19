@@ -1,6 +1,8 @@
 use std::sync::RwLock;
 use crate::transposition_table::entry::Entry;
 
+use rayon::prelude::*;
+
 const BUCKET_SIZE: usize = 3;
 const TABLE_SIZE: usize = 3_000_000;
 
@@ -72,7 +74,7 @@ impl TranspositionTable {
     }
 
     pub fn age_table(&self) {
-        for bucket in self.buckets.iter() {
+        self.buckets.par_iter().for_each(|bucket| {
             for entry in bucket.iter() {
                 let mut entry = entry.write().unwrap();
 
@@ -82,6 +84,6 @@ impl TranspositionTable {
                 }
 
             }
-        }
+        });
     }
 }
