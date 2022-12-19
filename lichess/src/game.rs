@@ -96,6 +96,11 @@ pub async fn listen_to_game(game_id: String) {
                     let recommended_timeout = engine.recommended_timeout(time_left, inc);
 
                     post_move(&client, game_id.clone(), engine.get_engine_move(recommended_timeout)).await;
+
+                    let now = std::time::Instant::now();
+                    engine.do_off_move_stuff();
+                    log::error!("{}", now.elapsed().as_millis());
+
                 }
 
 
@@ -135,6 +140,10 @@ pub async fn listen_to_game(game_id: String) {
                         let recommended_timeout = engine.recommended_timeout(time_left, inc);
 
                         post_move(&client, game_id.clone(), engine.get_engine_move(recommended_timeout)).await;
+
+                        let now = std::time::Instant::now();
+                        engine.do_off_move_stuff();
+                        log::error!("{}", now.elapsed().as_millis());
                     }
 
                 },

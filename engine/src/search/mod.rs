@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU8};
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 use chashmap::CHashMap;
 use chess::{Board, ChessMove};
-use crate::search::evaluated_position::EvaluatedPositions;
+use crate::transposition_table::entry::Entry;
+use crate::transposition_table::table::TranspositionTable;
 
 mod move_order;
 mod alpha_beta;
 mod iterative_deepening;
 mod quiesce_search;
-pub mod evaluated_position;
 
 static STOP_THREADS: AtomicBool = AtomicBool::new(false);
 pub static CURRENT_SEARCH_DEPTH: AtomicU8 = AtomicU8::new(0);
 
 pub struct SearchData {
-    evaluated_positions: EvaluatedPositions,
+    pub transposition_table: TranspositionTable,
     positions_visited: RwLock<HashMap<u64, u8>>,
     best_moves: CHashMap<u64, ChessMove>
 }
@@ -23,7 +23,7 @@ pub struct SearchData {
 impl SearchData {
     pub fn new() -> SearchData {
         SearchData {
-            evaluated_positions: CHashMap::new(),
+            transposition_table: TranspositionTable::new(),
             positions_visited: RwLock::new(HashMap::new()),
             best_moves: CHashMap::new()
         }
@@ -50,5 +50,39 @@ impl SearchData {
         visited += 1;
 
         visited_lock.insert(hash, visited);
+    }
+
+    pub fn get_or_calculate<F>(this: Arc<SearchData>, hash: u64, depth: u8, calculate: F) -> i32
+        where F: Fn(Arc<SearchData>) -> i32 {
+
+        let entry = this.transposition_table.get(hash);
+
+        // check if entry has been calculated
+        {
+            let entry = entry.read().unwrap();
+
+            if let Entry::Contains { depth: _depth, hash: _hash, score, .. } = *entry {
+                if hash == _hash && _depth >= depth {
+                    return score
+                }
+            }
+
+        }
+
+        let score = calculate(this.clone());
+
+        // push score to transposition table
+        {
+            let mut entry = entry.write().unwrap();
+            *entry = Entry::Contains {
+                hash,
+                depth,
+                score,
+                age: 0,
+            }
+        }
+
+        score
+
     }
 }

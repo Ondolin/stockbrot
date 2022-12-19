@@ -2,7 +2,6 @@ use std::sync::{Arc, RwLock};
 use std::sync::atomic::Ordering;
 use chess::{Board, BoardStatus, ChessMove, Color, MoveGen};
 use crate::Engine;
-use crate::search::evaluated_position::EvaluatedPositionsFunctions;
 use crate::search::quiesce_search::{quiesce_search_max, quiesce_search_min};
 use crate::search::move_order::get_move_order;
 
@@ -88,12 +87,12 @@ pub fn alpha_beta_max(board: Board, mut alpha: i32, beta: i32, depth_left: u8, s
 
         let copy = board.make_move_new(joice);
 
-        let score = search_data
-            .get_or_calculate_evaluation(
-                copy,
-                depth_left,
-                |eval| alpha_beta_min(copy, alpha, beta, depth_left - 1, eval)
-            );
+        let score = SearchData::get_or_calculate(
+            search_data.clone(),
+            copy.get_hash(),
+            depth_left - 1,
+            |data| alpha_beta_min(copy, alpha, beta, depth_left - 1, data)
+        );
 
         if score > value {
             value = score;
@@ -134,11 +133,13 @@ pub fn alpha_beta_min(board: Board, alpha: i32, mut beta: i32, depth_left: u8, s
         if STOP_THREADS.load(Ordering::SeqCst) { break; }
 
         let copy = board.make_move_new(joice);
-        let score = search_data
-            .get_or_calculate_evaluation(
-                copy,
-                depth_left,
-                |eval| alpha_beta_max(copy, alpha, beta, depth_left - 1, eval));
+
+        let score = SearchData::get_or_calculate(
+            search_data.clone(),
+            copy.get_hash(),
+            depth_left - 1,
+            |data| alpha_beta_max(copy, alpha, beta, depth_left - 1, data)
+        );
 
         if score < value {
             value = score;
