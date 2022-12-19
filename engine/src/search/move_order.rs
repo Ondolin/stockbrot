@@ -62,6 +62,35 @@ pub fn get_move_order(board: &Board, search_data: Arc<SearchData>) -> Vec<ChessM
     moves
 }
 
+pub fn get_move_order_captures(board: &Board) -> Vec<ChessMove> {
+    let mut iterable = MoveGen::new_legal(&board);
+
+    let targets = board.color_combined(!board.side_to_move());
+    iterable.set_iterator_mask(*targets);
+
+    let mut targets: Vec<ChessMove> = iterable.collect();
+
+    targets.sort_by(|a, b| {
+        let a_type = board.piece_on(a.get_source()).unwrap();
+        let b_type = board.piece_on(b.get_source()).unwrap();
+
+        // If a is a lesser piece use it first
+        if piece_type(&a_type) < piece_type(&b_type) { return core::cmp::Ordering::Greater }
+        else if piece_type(&a_type) > piece_type(&b_type) { return core::cmp::Ordering::Less }
+
+        let a_target = board.piece_on(a.get_dest()).unwrap();
+        let b_target = board.piece_on(b.get_dest()).unwrap();
+
+        // Capture high value pieces first
+        if piece_type(&a_target) > piece_type(&b_target) { return core::cmp::Ordering::Greater }
+        else if piece_type(&a_target) < piece_type(&b_target) { return core::cmp::Ordering::Less }
+
+        core::cmp::Ordering::Equal
+    });
+
+    targets
+}
+
 #[test]
 fn test_move_order() {
     use std::str::FromStr;

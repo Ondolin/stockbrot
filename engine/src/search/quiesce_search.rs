@@ -1,5 +1,6 @@
-use chess::{Board, MoveGen};
+use chess::Board;
 use crate::evaluation::evaluate;
+use crate::search::move_order::get_move_order_captures;
 
 pub fn quiesce_search_max(board: Board, mut alpha: i32, beta: i32) -> i32 {
 
@@ -7,15 +8,13 @@ pub fn quiesce_search_max(board: Board, mut alpha: i32, beta: i32) -> i32 {
     if stand_pat >= beta { return beta; }
     if stand_pat > alpha { alpha = stand_pat; }
 
-    let mut iterable = MoveGen::new_legal(&board);
-    let targets = board.color_combined(!board.side_to_move());
-    iterable.set_iterator_mask(*targets);
+    let moves = get_move_order_captures(&board);
 
-    if iterable.len() == 0 { return evaluate(&board) }
+    if moves.len() == 0 { return evaluate(&board) }
 
     let mut value = evaluate(&board);
 
-    for joice in iterable {
+    for joice in moves {
 
         let copy = board.make_move_new(joice);
 
@@ -39,15 +38,13 @@ pub fn quiesce_search_min(board: Board, alpha: i32, mut beta: i32) -> i32 {
     if stand_pat <= alpha { return alpha; }
     if stand_pat < beta { beta = stand_pat; }
 
-    let mut iterable = MoveGen::new_legal(&board);
-    let targets = board.color_combined(!board.side_to_move());
-    iterable.set_iterator_mask(*targets);
+    let moves = get_move_order_captures(&board);
 
-    if iterable.len() == 0 { return evaluate(&board) }
+    if moves.len() == 0 { return evaluate(&board) }
 
     let mut value = evaluate(&board);
 
-    for joice in iterable {
+    for joice in moves {
 
         let copy = board.make_move_new(joice);
 
