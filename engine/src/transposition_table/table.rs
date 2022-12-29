@@ -79,7 +79,7 @@ impl TranspositionTable {
                 let mut entry = entry.write().unwrap();
 
                 match *entry {
-                    Entry::Contains { hash, depth, score, age } => { *entry = Entry::Contains { hash, depth, score, age: age + 1 } }
+                    Entry::Contains { hash, depth, score, age, node_type } => { *entry = Entry::Contains { hash, depth, score, age: age + 1, node_type } }
                     Entry::Empty => {}
                 }
 

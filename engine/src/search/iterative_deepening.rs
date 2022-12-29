@@ -16,10 +16,12 @@ impl Engine {
         CURRENT_SEARCH_DEPTH.store(0, Ordering::Relaxed);
 
         // Stop the search if time if over
-        std::thread::spawn(move || {
+        let handle = std::thread::spawn(move || {
             std::thread::park_timeout(timeout);
 
             soft_stop_copy.store(true, Ordering::SeqCst);
+
+            log::info!("Stop Searching.");
 
             // if at least depth 6 is searched hard stop
             if CURRENT_SEARCH_DEPTH.load(Ordering::Relaxed) > 1 {
@@ -65,6 +67,9 @@ impl Engine {
 
             log::error!("Time elaps: {}", start_time.elapsed().as_micros());
         }
+
+        // necessary if search ends early (e.g. mate was found)
+        handle.thread().unpark();
 
         best_move.expect("Could not find a good move...")
 

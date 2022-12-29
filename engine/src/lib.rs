@@ -123,7 +123,10 @@ impl Engine {
     }
 
     pub fn do_off_move_stuff(&self) {
+
         self.search_data.transposition_table.age_table();
+        self.search_data.previous_score.lock().unwrap().clear();
+
     }
 }
 
